@@ -1,18 +1,19 @@
 package com.dioxd.floramusic.ui
 
 import android.graphics.Bitmap
+import android.graphics.Color
 import android.graphics.drawable.Drawable
 import android.media.MediaPlayer
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.view.MotionEvent
 import android.view.View
+import android.view.animation.DecelerateInterpolator
 import android.widget.SeekBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.palette.graphics.Palette
 import com.bumptech.glide.Glide
-import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
 import com.dioxd.floramusic.R
@@ -27,6 +28,11 @@ class NowPlayingActivity : AppCompatActivity() {
     private val handler = Handler(Looper.getMainLooper())
     private var isSeeking = false
     private var isLiked = false
+
+    // ── Swipe-down untuk tutup ────────────────────────────────────────────────
+    private var touchStartY = 0f
+    private var isDragging  = false
+    private val DISMISS_THRESHOLD = 220f
 
     private val updateProgress = object : Runnable {
         override fun run() {
@@ -54,16 +60,71 @@ class NowPlayingActivity : AppCompatActivity() {
         // Transparent status bar
         window.decorView.systemUiVisibility =
             View.SYSTEM_UI_FLAG_LAYOUT_STABLE or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-        window.statusBarColor = android.graphics.Color.TRANSPARENT
+        window.statusBarColor = Color.TRANSPARENT
 
         updateUI(PlayerState.currentSong)
         setupControls()
         setupPills()
+        setupSwipeToDismiss()
         handler.post(updateProgress)
     }
 
+    // ── Swipe-down pada cover art ─────────────────────────────────────────────
+    private fun setupSwipeToDismiss() {
+        binding.albumArtContainer.setOnTouchListener { _, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    touchStartY = event.rawY
+                    isDragging  = false
+                    false
+                }
+                MotionEvent.ACTION_MOVE -> {
+                    val dy = event.rawY - touchStartY
+                    if (dy > 10) {
+                        isDragging = true
+                        // Ikuti jari — translasi seluruh konten
+                        val clamped = dy.coerceAtMost(400f)
+                        binding.contentLayout.translationY = clamped
+                        binding.contentLayout.alpha = 1f - (clamped / 500f)
+                        true
+                    } else false
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    val dy = event.rawY - touchStartY
+                    if (isDragging && dy > DISMISS_THRESHOLD) {
+                        // Tutup dengan animasi
+                        binding.contentLayout.animate()
+                            .translationY(binding.root.height.toFloat())
+                            .alpha(0f)
+                            .setDuration(220)
+                            .setInterpolator(DecelerateInterpolator())
+                            .withEndAction { finish() }
+                            .start()
+                    } else {
+                        // Snap kembali
+                        binding.contentLayout.animate()
+                            .translationY(0f)
+                            .alpha(1f)
+                            .setDuration(300)
+                            .setInterpolator(DecelerateInterpolator())
+                            .start()
+                    }
+                    true
+                }
+                else -> false
+            }
+        }
+    }
+
     private fun setupControls() {
-        binding.btnClose.setOnClickListener { finish() }
+        binding.btnClose.setOnClickListener {
+            binding.contentLayout.animate()
+                .translationY(binding.root.height.toFloat())
+                .alpha(0f)
+                .setDuration(220)
+                .withEndAction { finish() }
+                .start()
+        }
 
         binding.btnSettings.setOnClickListener {
             Toast.makeText(this, "⚙️ Pengaturan (coming soon)", Toast.LENGTH_SHORT).show()
@@ -71,9 +132,8 @@ class NowPlayingActivity : AppCompatActivity() {
 
         binding.btnLike.setOnClickListener {
             isLiked = !isLiked
-            binding.btnLike.setColorFilter(
-                if (isLiked) android.graphics.Color.parseColor("#E8A87C")
-                else android.graphics.Color.WHITE
+            binding.btnLike.setImageResource(
+                if (isLiked) R.drawable.ic_heart_filled else R.drawable.ic_heart
             )
         }
 
@@ -99,8 +159,7 @@ class NowPlayingActivity : AppCompatActivity() {
         binding.btnPrev.setOnClickListener {
             val prev = if (PlayerState.currentIndex <= 0)
                 PlayerState.songs.size - 1
-            else
-                PlayerState.currentIndex - 1
+            else PlayerState.currentIndex - 1
             playAt(prev)
         }
 
@@ -117,17 +176,21 @@ class NowPlayingActivity : AppCompatActivity() {
     }
 
     private fun setupPills() {
+        // Toggle shuffle
         binding.pillShuffle.setOnClickListener {
             PlayerState.shuffle = !PlayerState.shuffle
-            binding.pillShuffle.background = getDrawable(
-                if (PlayerState.shuffle) R.drawable.bg_pill_active else R.drawable.bg_pill
+            binding.pillShuffle.alpha = if (PlayerState.shuffle) 1f else 0.5f
+            binding.pillShuffle.setColorFilter(
+                if (PlayerState.shuffle) Color.parseColor("#E8A87C") else Color.WHITE
             )
         }
 
+        // Toggle repeat
         binding.pillRepeat.setOnClickListener {
             PlayerState.repeat = !PlayerState.repeat
-            binding.pillRepeat.background = getDrawable(
-                if (PlayerState.repeat) R.drawable.bg_pill_active else R.drawable.bg_pill
+            binding.pillRepeat.alpha = if (PlayerState.repeat) 1f else 0.5f
+            binding.pillRepeat.setColorFilter(
+                if (PlayerState.repeat) Color.parseColor("#E8A87C") else Color.WHITE
             )
         }
 
@@ -148,42 +211,30 @@ class NowPlayingActivity : AppCompatActivity() {
         song ?: return
         binding.tvTitle.text  = song.title
         binding.tvArtist.text = song.artist
-
         updatePlayButton()
 
-        // Load album art + blur background
+        // Load album art + blur bg
         Glide.with(this)
             .asBitmap()
             .load(song.albumArtUri)
             .into(object : CustomTarget<Bitmap>() {
                 override fun onResourceReady(bitmap: Bitmap, transition: Transition<in Bitmap>?) {
-                    // Album art
                     binding.imgAlbumArt.setImageBitmap(bitmap)
-
-                    // Blur background
                     Blurry.with(applicationContext)
-                        .radius(20)
-                        .sampling(4)
+                        .radius(22).sampling(4)
                         .from(bitmap)
                         .into(binding.imgBgBlur)
                 }
 
-                override fun onLoadCleared(placeholder: Drawable?) {
-                    // Fallback: solid dark background (no cover)
+                override fun onLoadFailed(errorDrawable: Drawable?) {
+                    // Tidak ada cover — background solid dark + aksen subtle
                     binding.imgBgBlur.setImageDrawable(null)
-                    binding.imgBgBlur.setBackgroundColor(
-                        android.graphics.Color.parseColor("#2d2420")
-                    )
+                    binding.imgBgBlur.setBackgroundColor(Color.parseColor("#2d2420"))
+                    binding.imgAlbumArt.setImageResource(R.drawable.ic_music_note)
+                    binding.imgAlbumArt.setBackgroundColor(Color.parseColor("#3d3028"))
                 }
 
-                override fun onLoadFailed(errorDrawable: Drawable?) {
-                    // No cover art — gunakan background solid + aksen subtle
-                    binding.imgBgBlur.setImageDrawable(null)
-                    binding.imgBgBlur.setBackgroundColor(
-                        android.graphics.Color.parseColor("#2d2420")
-                    )
-                    binding.imgAlbumArt.setImageResource(R.drawable.ic_music_note)
-                }
+                override fun onLoadCleared(placeholder: Drawable?) {}
             })
     }
 
@@ -194,8 +245,7 @@ class NowPlayingActivity : AppCompatActivity() {
         PlayerState.mediaPlayer?.release()
         PlayerState.mediaPlayer = MediaPlayer().apply {
             setDataSource(applicationContext, song.uri)
-            prepare()
-            start()
+            prepare(); start()
             setOnCompletionListener {
                 if (PlayerState.repeat) { seekTo(0); start() }
                 else playAt((PlayerState.currentIndex + 1) % PlayerState.songs.size)

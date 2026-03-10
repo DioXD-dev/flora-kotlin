@@ -5,41 +5,42 @@
     android:layout_height="match_parent"
     android:background="#1a1a1a">
 
-    <!-- Blurred background album art -->
+    <!-- Blurred background -->
     <ImageView
         android:id="@+id/imgBgBlur"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:scaleType="centerCrop"
-        android:alpha="0.6" />
+        android:alpha="0.55" />
 
-    <!-- Gradient overlay bottom (gelap di bawah) -->
+    <!-- Gradient overlay bawah -->
     <View
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@drawable/gradient_bottom" />
 
-    <!-- Gradient overlay top (gelap di atas untuk status bar) -->
+    <!-- Gradient overlay atas -->
     <View
         android:layout_width="match_parent"
-        android:layout_height="180dp"
+        android:layout_height="200dp"
         android:background="@drawable/gradient_top" />
 
-    <!-- Main content -->
+    <!-- Konten utama -->
     <LinearLayout
+        android:id="@+id/contentLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:paddingTop="48dp"
-        android:paddingBottom="32dp">
+        android:paddingBottom="28dp">
 
-        <!-- Top bar: Back + Title + Settings -->
+        <!-- Top bar: Back + Judul + Settings -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:paddingHorizontal="8dp"
-            android:paddingBottom="8dp"
+            android:paddingBottom="4dp"
             android:gravity="center_vertical">
 
             <ImageButton
@@ -55,7 +56,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Sedang Diputar"
-                android:textSize="16sp"
+                android:textSize="15sp"
                 android:textStyle="bold"
                 android:textColor="#FFFFFF"
                 android:gravity="center" />
@@ -70,13 +71,14 @@
 
         </LinearLayout>
 
-        <!-- Album art besar (rounded square) -->
+        <!-- Album art — kotak persegi, radius 20dp, swipe-down untuk tutup -->
         <FrameLayout
+            android:id="@+id/albumArtContainer"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:paddingHorizontal="32dp"
-            android:paddingVertical="12dp">
+            android:paddingHorizontal="28dp"
+            android:paddingVertical="8dp">
 
             <ImageView
                 android:id="@+id/imgAlbumArt"
@@ -86,17 +88,18 @@
                 android:background="@drawable/bg_album_rounded"
                 android:clipToOutline="true"
                 android:src="@drawable/ic_music_note"
-                android:elevation="12dp" />
+                android:elevation="16dp" />
 
         </FrameLayout>
 
-        <!-- Song info + like button -->
+        <!-- Judul + Artis + Like -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:paddingHorizontal="28dp"
-            android:paddingBottom="12dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="10dp"
             android:gravity="center_vertical">
 
             <LinearLayout
@@ -109,24 +112,26 @@
                     android:id="@+id/tvTitle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:textSize="22sp"
+                    android:textSize="21sp"
                     android:textStyle="bold"
                     android:textColor="#FFFFFF"
                     android:maxLines="1"
                     android:ellipsize="end" />
 
+                <!-- Artis — warna aksen oranye -->
                 <TextView
                     android:id="@+id/tvArtist"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:textSize="14sp"
-                    android:textColor="#CCE8A87C"
+                    android:textColor="#E8A87C"
                     android:maxLines="1"
                     android:ellipsize="end"
-                    android:layout_marginTop="4dp" />
+                    android:layout_marginTop="3dp" />
 
             </LinearLayout>
 
+            <!-- Like button -->
             <ImageButton
                 android:id="@+id/btnLike"
                 android:layout_width="44dp"
@@ -138,13 +143,13 @@
 
         </LinearLayout>
 
-        <!-- Seekbar + time -->
+        <!-- Seekbar + waktu -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:paddingHorizontal="24dp"
-            android:paddingBottom="12dp">
+            android:paddingBottom="10dp">
 
             <SeekBar
                 android:id="@+id/seekBar"
@@ -152,13 +157,13 @@
                 android:layout_height="wrap_content"
                 android:progressTint="#E8A87C"
                 android:thumbTint="#E8A87C"
-                android:progressBackgroundTint="#55FFFFFF" />
+                android:progressBackgroundTint="#44FFFFFF" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:layout_marginTop="4dp">
+                android:layout_marginTop="2dp">
 
                 <TextView
                     android:id="@+id/tvCurrentTime"
@@ -166,50 +171,51 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="0:00"
-                    android:textSize="12sp"
-                    android:textColor="#CCFFFFFF" />
+                    android:textSize="11sp"
+                    android:textColor="#BBFFFFFF" />
 
                 <TextView
                     android:id="@+id/tvTotalTime"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="0:00"
-                    android:textSize="12sp"
-                    android:textColor="#CCFFFFFF" />
+                    android:textSize="11sp"
+                    android:textColor="#BBFFFFFF" />
 
             </LinearLayout>
 
         </LinearLayout>
 
-        <!-- Controls: prev, play/pause, next -->
+        <!-- Kontrol: Prev, Play/Pause, Next -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:paddingHorizontal="32dp"
+            android:paddingHorizontal="40dp"
             android:paddingBottom="16dp"
             android:gravity="center_vertical">
 
+            <!-- Prev — warna aksen -->
             <ImageButton
                 android:id="@+id/btnPrev"
-                android:layout_width="56dp"
-                android:layout_height="56dp"
-                android:background="@drawable/bg_btn_circle"
-                android:src="@drawable/ic_skip_prev_white"
-                android:padding="12dp"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_skip_prev_accent"
+                android:padding="8dp"
                 android:contentDescription="Sebelumnya" />
 
             <View android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" />
 
-            <!-- Play/Pause button (big white circle) -->
+            <!-- Play/Pause — bulat, aksen oranye dengan glow -->
             <FrameLayout
-                android:layout_width="72dp"
-                android:layout_height="72dp">
+                android:layout_width="76dp"
+                android:layout_height="76dp">
 
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:background="@drawable/bg_play_big" />
+                    android:background="@drawable/bg_play_accent" />
 
                 <ImageButton
                     android:id="@+id/btnPlayPause"
@@ -218,159 +224,111 @@
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:src="@drawable/ic_play_dark"
                     android:contentDescription="Play/Pause"
-                    android:padding="14dp" />
+                    android:padding="16dp" />
 
             </FrameLayout>
 
             <View android:layout_width="0dp" android:layout_height="1dp" android:layout_weight="1" />
 
+            <!-- Next — warna aksen -->
             <ImageButton
                 android:id="@+id/btnNext"
-                android:layout_width="56dp"
-                android:layout_height="56dp"
-                android:background="@drawable/bg_btn_circle"
-                android:src="@drawable/ic_skip_next_white"
-                android:padding="12dp"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_skip_next_accent"
+                android:padding="8dp"
                 android:contentDescription="Berikutnya" />
 
         </LinearLayout>
 
-        <!-- Shortcut Pills: Shuffle, Repeat, Queue, Lyrics, Timer -->
-        <HorizontalScrollView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingHorizontal="20dp"
-            android:scrollbars="none"
-            android:fadingEdge="horizontal">
+        <!-- ── Satu Pill Bar berisi semua shortcuts ── -->
+        <LinearLayout
+            android:id="@+id/pillBar"
+            android:layout_width="wrap_content"
+            android:layout_height="44dp"
+            android:layout_gravity="center_horizontal"
+            android:background="@drawable/bg_pill_bar"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="6dp">
 
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:padding="4dp">
+            <!-- Shuffle -->
+            <ImageButton
+                android:id="@+id/pillShuffle"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_shuffle"
+                android:alpha="0.5"
+                android:contentDescription="Acak"
+                android:padding="10dp" />
 
-                <!-- Shuffle -->
-                <LinearLayout
-                    android:id="@+id/pillShuffle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="36dp"
-                    android:background="@drawable/bg_pill"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:paddingHorizontal="14dp"
-                    android:layout_marginEnd="8dp">
-                    <ImageView
-                        android:layout_width="16dp"
-                        android:layout_height="16dp"
-                        android:src="@drawable/ic_shuffle"
-                        android:layout_marginEnd="6dp" />
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Acak"
-                        android:textSize="13sp"
-                        android:textStyle="bold"
-                        android:textColor="#FFFFFF" />
-                </LinearLayout>
+            <View
+                android:layout_width="1dp"
+                android:layout_height="20dp"
+                android:background="#44FFFFFF" />
 
-                <!-- Repeat -->
-                <LinearLayout
-                    android:id="@+id/pillRepeat"
-                    android:layout_width="wrap_content"
-                    android:layout_height="36dp"
-                    android:background="@drawable/bg_pill"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:paddingHorizontal="14dp"
-                    android:layout_marginEnd="8dp">
-                    <ImageView
-                        android:layout_width="16dp"
-                        android:layout_height="16dp"
-                        android:src="@drawable/ic_repeat"
-                        android:layout_marginEnd="6dp" />
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Ulangi"
-                        android:textSize="13sp"
-                        android:textStyle="bold"
-                        android:textColor="#FFFFFF" />
-                </LinearLayout>
+            <!-- Repeat -->
+            <ImageButton
+                android:id="@+id/pillRepeat"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_repeat"
+                android:alpha="0.5"
+                android:contentDescription="Ulangi"
+                android:padding="10dp" />
 
-                <!-- Queue -->
-                <LinearLayout
-                    android:id="@+id/pillQueue"
-                    android:layout_width="wrap_content"
-                    android:layout_height="36dp"
-                    android:background="@drawable/bg_pill"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:paddingHorizontal="14dp"
-                    android:layout_marginEnd="8dp">
-                    <ImageView
-                        android:layout_width="16dp"
-                        android:layout_height="16dp"
-                        android:src="@drawable/ic_queue"
-                        android:layout_marginEnd="6dp" />
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Antrian"
-                        android:textSize="13sp"
-                        android:textStyle="bold"
-                        android:textColor="#FFFFFF" />
-                </LinearLayout>
+            <View
+                android:layout_width="1dp"
+                android:layout_height="20dp"
+                android:background="#44FFFFFF" />
 
-                <!-- Lyrics -->
-                <LinearLayout
-                    android:id="@+id/pillLyrics"
-                    android:layout_width="wrap_content"
-                    android:layout_height="36dp"
-                    android:background="@drawable/bg_pill"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:paddingHorizontal="14dp"
-                    android:layout_marginEnd="8dp">
-                    <ImageView
-                        android:layout_width="16dp"
-                        android:layout_height="16dp"
-                        android:src="@drawable/ic_lyrics"
-                        android:layout_marginEnd="6dp" />
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Lirik"
-                        android:textSize="13sp"
-                        android:textStyle="bold"
-                        android:textColor="#FFFFFF" />
-                </LinearLayout>
+            <!-- Queue -->
+            <ImageButton
+                android:id="@+id/pillQueue"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_queue"
+                android:alpha="0.5"
+                android:contentDescription="Antrian"
+                android:padding="10dp" />
 
-                <!-- Timer -->
-                <LinearLayout
-                    android:id="@+id/pillTimer"
-                    android:layout_width="wrap_content"
-                    android:layout_height="36dp"
-                    android:background="@drawable/bg_pill"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:paddingHorizontal="14dp">
-                    <ImageView
-                        android:layout_width="16dp"
-                        android:layout_height="16dp"
-                        android:src="@drawable/ic_timer"
-                        android:layout_marginEnd="6dp" />
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Timer"
-                        android:textSize="13sp"
-                        android:textStyle="bold"
-                        android:textColor="#FFFFFF" />
-                </LinearLayout>
+            <View
+                android:layout_width="1dp"
+                android:layout_height="20dp"
+                android:background="#44FFFFFF" />
 
-            </LinearLayout>
-        </HorizontalScrollView>
+            <!-- Lyrics -->
+            <ImageButton
+                android:id="@+id/pillLyrics"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_lyrics"
+                android:alpha="0.5"
+                android:contentDescription="Lirik"
+                android:padding="10dp" />
+
+            <View
+                android:layout_width="1dp"
+                android:layout_height="20dp"
+                android:background="#44FFFFFF" />
+
+            <!-- Timer -->
+            <ImageButton
+                android:id="@+id/pillTimer"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_timer"
+                android:alpha="0.5"
+                android:contentDescription="Timer"
+                android:padding="10dp" />
+
+        </LinearLayout>
 
     </LinearLayout>
 </FrameLayout>
