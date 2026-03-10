@@ -1,6 +1,9 @@
 package com.dioxd.floramusic.ui
 
-import androidx.compose.animation.*
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
@@ -11,9 +14,14 @@ import com.dioxd.floramusic.data.Song
 
 @Composable
 fun FloraApp(
-    songs: List<Song>, onSongClick: (Song, Int) -> Unit,
-    onTogglePlay: () -> Unit, onNext: () -> Unit, onPrev: () -> Unit,
-    seekTo: (Int) -> Unit, progress: Int, duration: Int,
+    songs:        List<Song>,
+    onSongClick:  (Song, Int) -> Unit,
+    onTogglePlay: () -> Unit,
+    onNext:       () -> Unit,
+    onPrev:       () -> Unit,
+    seekTo:       (Int) -> Unit,
+    progress:     Int,
+    duration:     Int,
 ) {
     val nav = rememberNavController()
 
@@ -28,13 +36,18 @@ fun FloraApp(
         composable("list") {
             SongListScreen(
                 songs             = songs,
-                onSongClick       = { song, idx -> onSongClick(song, idx); nav.navigate("nowplaying") },
-                onNowPlayingClick = { if (PlayerState.currentSong != null) nav.navigate("nowplaying") },
-                onTogglePlay      = onTogglePlay,
-                onNext            = onNext,
-                onPrev            = onPrev,
-                progress          = progress,
-                duration          = duration,
+                onSongClick       = { song, idx ->
+                    onSongClick(song, idx)
+                    nav.navigate("nowplaying")
+                },
+                onNowPlayingClick = {
+                    if (PlayerState.currentSong != null) nav.navigate("nowplaying")
+                },
+                onTogglePlay = onTogglePlay,
+                onNext       = onNext,
+                onPrev       = onPrev,
+                progress     = progress,
+                duration     = duration,
             )
         }
         composable("nowplaying") {

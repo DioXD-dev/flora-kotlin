@@ -2,28 +2,27 @@ name: Build APK
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
+      - uses: gradle/actions/setup-gradle@v3
 
-      - name: Setup Gradle Wrapper
+      - name: Download Gradle wrapper
         run: |
           wget -q https://services.gradle.org/distributions/gradle-8.6-bin.zip
-          unzip -q gradle-8.6-bin.zip
-          ./gradle-8.6/bin/gradle wrapper
+          unzip -q gradle-8.6-bin.zip -d /tmp/gradle
+          /tmp/gradle/gradle-8.6/bin/gradle wrapper
           chmod +x gradlew
 
       - name: Build Debug APK
@@ -32,5 +31,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Flora-kotlin-debug
+          name: flora-debug
           path: app/build/outputs/apk/debug/*.apk

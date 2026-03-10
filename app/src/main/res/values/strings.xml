@@ -1,7 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Flora Music</string>
-    <string name="no_song">Tidak ada lagu</string>
-    <string name="unknown_artist">Artis tidak diketahui</string>
-    <string name="search_hint">Cari lagu, artis, album…</string>
 </resources>
