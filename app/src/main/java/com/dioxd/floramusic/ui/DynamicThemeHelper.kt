@@ -1,75 +1,29 @@
 package com.dioxd.floramusic.ui
 
-import android.graphics.Bitmap
-import android.graphics.Color
-import androidx.palette.graphics.Palette
+import androidx.compose.ui.graphics.Color
 
 /**
- * Mengekstrak warna dominan dari cover art dan menghasilkan
- * set warna Material You (primary, container, surface, on-surface).
+ * Menghasilkan warna placeholder yang konsisten berdasarkan judul lagu.
+ * Dipakai sebagai background album art ketika cover tidak tersedia.
  */
 object DynamicThemeHelper {
 
-    data class DynamicColors(
-        val primary: Int,          // Warna utama (aksen)
-        val onPrimary: Int,        // Teks di atas primary
-        val primaryContainer: Int, // Container — lebih terang
-        val onPrimaryContainer: Int,
-        val surface: Int,          // Background card/surface
-        val onSurface: Int,        // Teks di atas surface
-        val background: Int,       // Background halaman
+    private val palette = listOf(
+        Color(0xFF4a9460), // hijau flora
+        Color(0xFF7B6FA0), // ungu soft
+        Color(0xFF5B8DB8), // biru
+        Color(0xFFB06A4E), // coklat oranye
+        Color(0xFF4E8B8B), // teal
+        Color(0xFF9B6B9B), // lavender
+        Color(0xFF7A9E5A), // sage
+        Color(0xFFB07A50), // amber
+        Color(0xFF5A7AB0), // slate blue
+        Color(0xFF8B5E7A), // mauve
     )
 
-    // Warna fallback jika tidak ada cover art
-    val fallback = DynamicColors(
-        primary             = Color.parseColor("#E8A87C"),
-        onPrimary           = Color.parseColor("#2a1500"),
-        primaryContainer    = Color.parseColor("#4a2010"),
-        onPrimaryContainer  = Color.parseColor("#FDEBD8"),
-        surface             = Color.parseColor("#242019"),
-        onSurface           = Color.parseColor("#F0EBE3"),
-        background          = Color.parseColor("#1A1714"),
-    )
-
-    fun fromBitmap(bitmap: Bitmap): DynamicColors {
-        val palette = Palette.from(bitmap).generate()
-
-        // Ambil swatch terbaik — prioritas: Vibrant → Muted → DarkVibrant
-        val swatch = palette.vibrantSwatch
-            ?: palette.mutedSwatch
-            ?: palette.darkVibrantSwatch
-            ?: return fallback
-
-        val primary = swatch.rgb
-        val h = FloatArray(3)
-        Color.colorToHSV(primary, h)
-
-        // Buat turunan warna dari hue yang sama
-        val primaryContainer = hsv(h[0], h[1] * 0.5f, 0.28f)
-        val onPrimaryContainer = hsv(h[0], h[1] * 0.3f, 0.88f)
-        val surface = hsv(h[0], h[1] * 0.25f, 0.14f)
-        val background = hsv(h[0], h[1] * 0.20f, 0.09f)
-
-        // onPrimary — hitam atau putih tergantung kecerahan primary
-        val luminance = (0.299 * Color.red(primary) +
-                         0.587 * Color.green(primary) +
-                         0.114 * Color.blue(primary)) / 255.0
-        val onPrimary = if (luminance > 0.45) Color.parseColor("#1a0e00")
-                        else Color.parseColor("#FFFFFF")
-
-        return DynamicColors(
-            primary             = primary,
-            onPrimary           = onPrimary,
-            primaryContainer    = primaryContainer,
-            onPrimaryContainer  = onPrimaryContainer,
-            surface             = surface,
-            onSurface           = Color.parseColor("#F0EBE3"),
-            background          = background,
-        )
-    }
-
-    private fun hsv(h: Float, s: Float, v: Float): Int {
-        val arr = floatArrayOf(h, s.coerceIn(0f, 1f), v.coerceIn(0f, 1f))
-        return Color.HSVToColor(arr)
+    /** Warna konsisten berdasarkan hash judul */
+    fun colorForTitle(title: String): Color {
+        val idx = Math.abs(title.hashCode()) % palette.size
+        return palette[idx].copy(alpha = 0.35f)
     }
 }
