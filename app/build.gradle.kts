@@ -37,4 +37,10 @@ dependencies {
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation("androidx.activity:activity-ktx:1.9.0")
     implementation("com.github.bumptech.glide:glide:4.16.0")
+
+    // Palette API — extract dominant color dari album art
+    implementation("androidx.palette:palette-ktx:1.0.0")
+
+    // Blur effect
+    implementation("jp.wasabeef:blurry:4.0.1")
 }
