@@ -1,3 +1,262 @@
+#!/bin/bash
+# Flora Music - Material You Dynamic Color
+# Jalankan di dalam folder ~/flora-kotlin
+#
+# Apa yang diubah:
+#   1. SongAdapter.kt   — placeholder warna-warni per lagu
+#   2. NowPlayingActivity.kt — ekstrak warna dari cover art, terapkan ke UI
+#   3. DynamicThemeHelper.kt — helper palette Material You
+#   4. PlayerState.kt   — tambah field shuffle & repeat
+#   5. bg_album_art_color.xml — drawable placeholder warna
+
+echo "🌿 Menerapkan Material You Dynamic Color..."
+
+mkdir -p app/src/main/res/drawable
+mkdir -p app/src/main/java/com/dioxd/floramusic/ui
+mkdir -p app/src/main/java/com/dioxd/floramusic/data
+
+# ── 1. DynamicThemeHelper.kt ──────────────────────────────────────────────────
+# Helper: ekstrak warna dominan dari Bitmap, generate palette Material You
+cat > app/src/main/java/com/dioxd/floramusic/ui/DynamicThemeHelper.kt << 'EOF'
+package com.dioxd.floramusic.ui
+
+import android.graphics.Bitmap
+import android.graphics.Color
+import androidx.palette.graphics.Palette
+
+/**
+ * Mengekstrak warna dominan dari cover art dan menghasilkan
+ * set warna Material You (primary, container, surface, on-surface).
+ */
+object DynamicThemeHelper {
+
+    data class DynamicColors(
+        val primary: Int,          // Warna utama (aksen)
+        val onPrimary: Int,        // Teks di atas primary
+        val primaryContainer: Int, // Container — lebih terang
+        val onPrimaryContainer: Int,
+        val surface: Int,          // Background card/surface
+        val onSurface: Int,        // Teks di atas surface
+        val background: Int,       // Background halaman
+    )
+
+    // Warna fallback jika tidak ada cover art
+    val fallback = DynamicColors(
+        primary             = Color.parseColor("#E8A87C"),
+        onPrimary           = Color.parseColor("#2a1500"),
+        primaryContainer    = Color.parseColor("#4a2010"),
+        onPrimaryContainer  = Color.parseColor("#FDEBD8"),
+        surface             = Color.parseColor("#242019"),
+        onSurface           = Color.parseColor("#F0EBE3"),
+        background          = Color.parseColor("#1A1714"),
+    )
+
+    fun fromBitmap(bitmap: Bitmap): DynamicColors {
+        val palette = Palette.from(bitmap).generate()
+
+        // Ambil swatch terbaik — prioritas: Vibrant → Muted → DarkVibrant
+        val swatch = palette.vibrantSwatch
+            ?: palette.mutedSwatch
+            ?: palette.darkVibrantSwatch
+            ?: return fallback
+
+        val primary = swatch.rgb
+        val h = FloatArray(3)
+        Color.colorToHSV(primary, h)
+
+        // Buat turunan warna dari hue yang sama
+        val primaryContainer = hsv(h[0], h[1] * 0.5f, 0.28f)
+        val onPrimaryContainer = hsv(h[0], h[1] * 0.3f, 0.88f)
+        val surface = hsv(h[0], h[1] * 0.25f, 0.14f)
+        val background = hsv(h[0], h[1] * 0.20f, 0.09f)
+
+        // onPrimary — hitam atau putih tergantung kecerahan primary
+        val luminance = (0.299 * Color.red(primary) +
+                         0.587 * Color.green(primary) +
+                         0.114 * Color.blue(primary)) / 255.0
+        val onPrimary = if (luminance > 0.45) Color.parseColor("#1a0e00")
+                        else Color.parseColor("#FFFFFF")
+
+        return DynamicColors(
+            primary             = primary,
+            onPrimary           = onPrimary,
+            primaryContainer    = primaryContainer,
+            onPrimaryContainer  = onPrimaryContainer,
+            surface             = surface,
+            onSurface           = Color.parseColor("#F0EBE3"),
+            background          = background,
+        )
+    }
+
+    private fun hsv(h: Float, s: Float, v: Float): Int {
+        val arr = floatArrayOf(h, s.coerceIn(0f, 1f), v.coerceIn(0f, 1f))
+        return Color.HSVToColor(arr)
+    }
+}
+EOF
+echo "  ✓ DynamicThemeHelper.kt"
+
+# ── 2. SongAdapter.kt ─────────────────────────────────────────────────────────
+# Placeholder warna-warni berdasarkan judul lagu (tidak perlu cover art)
+cat > app/src/main/java/com/dioxd/floramusic/ui/SongAdapter.kt << 'EOF'
+package com.dioxd.floramusic.ui
+
+import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
+import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.DataSource
+import com.bumptech.glide.load.engine.GlideException
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
+import com.bumptech.glide.request.RequestListener
+import com.bumptech.glide.request.target.Target
+import com.dioxd.floramusic.R
+import com.dioxd.floramusic.data.Song
+import com.dioxd.floramusic.databinding.ItemSongBinding
+
+class SongAdapter(
+    private val onSongClick: (Song, Int) -> Unit
+) : ListAdapter<Song, SongAdapter.SongViewHolder>(DiffCallback) {
+
+    var nowPlayingId: Long = -1L
+        set(value) {
+            val old = currentList.indexOfFirst { it.id == field }
+            val new = currentList.indexOfFirst { it.id == value }
+            field = value
+            if (old >= 0) notifyItemChanged(old)
+            if (new >= 0) notifyItemChanged(new)
+        }
+
+    companion object DiffCallback : DiffUtil.ItemCallback<Song>() {
+        override fun areItemsTheSame(a: Song, b: Song) = a.id == b.id
+        override fun areContentsTheSame(a: Song, b: Song) = a == b
+
+        // Warm pastel — sama dengan warna di versi React Flora
+        private val PLACEHOLDER_COLORS = listOf(
+            0xFFB87840.toInt(), 0xFF7A6E88.toInt(), 0xFF5A9870.toInt(),
+            0xFFB86060.toInt(), 0xFF5A84B8.toInt(), 0xFFB8980C.toInt(),
+            0xFF8870A8.toInt(), 0xFF5CA4A0.toInt(), 0xFFA470A0.toInt(),
+            0xFF7A9854.toInt(), 0xFFB87090.toInt(), 0xFF5A78B8.toInt(),
+        )
+
+        fun colorForSong(title: String): Int {
+            val hash = title.fold(0) { acc, c -> acc * 31 + c.code }
+            return PLACEHOLDER_COLORS[Math.abs(hash) % PLACEHOLDER_COLORS.size]
+        }
+
+        private fun darken(color: Int, factor: Float = 0.70f): Int {
+            val r = (Color.red(color)   * factor).toInt().coerceIn(0, 255)
+            val g = (Color.green(color) * factor).toInt().coerceIn(0, 255)
+            val b = (Color.blue(color)  * factor).toInt().coerceIn(0, 255)
+            return Color.argb(255, r, g, b)
+        }
+
+        fun roundedBg(color: Int): GradientDrawable = GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            setColor(darken(color))
+            cornerRadius = 42f   // ~14dp @ xxhdpi
+        }
+    }
+
+    inner class SongViewHolder(private val binding: ItemSongBinding)
+        : RecyclerView.ViewHolder(binding.root) {
+
+        fun bind(song: Song, position: Int) {
+            val isPlaying = song.id == nowPlayingId
+            binding.tvTitle.text    = song.title
+            binding.tvArtist.text   = song.artist
+            binding.tvDuration.text = song.durationText
+            binding.playingIndicator.visibility = if (isPlaying) View.VISIBLE else View.GONE
+            binding.tvTitle.alpha   = if (isPlaying) 1f else 0.9f
+
+            val placeholder = roundedBg(colorForSong(song.title))
+            binding.imgAlbumArt.background = placeholder
+
+            Glide.with(binding.imgAlbumArt)
+                .load(song.albumArtUri)
+                .placeholder(R.drawable.ic_music_note)
+                .error(R.drawable.ic_music_note)
+                .transition(DrawableTransitionOptions.withCrossFade())
+                .centerCrop()
+                .listener(object : RequestListener<android.graphics.drawable.Drawable> {
+                    override fun onLoadFailed(
+                        e: GlideException?, model: Any?,
+                        target: Target<android.graphics.drawable.Drawable>,
+                        isFirstResource: Boolean
+                    ): Boolean {
+                        binding.imgAlbumArt.background = placeholder
+                        return false
+                    }
+                    override fun onResourceReady(
+                        resource: android.graphics.drawable.Drawable,
+                        model: Any,
+                        target: Target<android.graphics.drawable.Drawable>?,
+                        dataSource: DataSource,
+                        isFirstResource: Boolean
+                    ): Boolean {
+                        binding.imgAlbumArt.background = null
+                        return false
+                    }
+                })
+                .into(binding.imgAlbumArt)
+
+            binding.root.setOnClickListener { onSongClick(song, position) }
+        }
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
+        SongViewHolder(ItemSongBinding.inflate(LayoutInflater.from(parent.context), parent, false))
+
+    override fun onBindViewHolder(holder: SongViewHolder, position: Int) =
+        holder.bind(getItem(position), position)
+}
+EOF
+echo "  ✓ SongAdapter.kt"
+
+# ── 3. PlayerState.kt ─────────────────────────────────────────────────────────
+# Tambah field shuffle & repeat
+cat > app/src/main/java/com/dioxd/floramusic/data/PlayerState.kt << 'EOF'
+package com.dioxd.floramusic.data
+
+import android.media.MediaPlayer
+
+object PlayerState {
+    var mediaPlayer: MediaPlayer?  = null
+    var songs: List<Song>          = emptyList()
+    var currentIndex: Int          = -1
+    var isPlaying: Boolean         = false
+    var shuffle: Boolean           = false
+    var repeat: Boolean            = false
+
+    val currentSong: Song?
+        get() = songs.getOrNull(currentIndex)
+
+    var onSongChanged: ((Song) -> Unit)?        = null
+    var onPlayStateChanged: ((Boolean) -> Unit)? = null
+
+    fun nextIndex(): Int {
+        if (songs.isEmpty()) return 0
+        return if (shuffle) (songs.indices - currentIndex).random()
+        else (currentIndex + 1) % songs.size
+    }
+
+    fun prevIndex(): Int {
+        if (songs.isEmpty()) return 0
+        return if (currentIndex <= 0) songs.size - 1
+        else currentIndex - 1
+    }
+}
+EOF
+echo "  ✓ PlayerState.kt"
+
+# ── 4. NowPlayingActivity.kt ─────────────────────────────────────────────────
+# Terapkan DynamicColors ke seekbar, tombol play, teks artis, background
+cat > app/src/main/java/com/dioxd/floramusic/ui/NowPlayingActivity.kt << 'EOF'
 package com.dioxd.floramusic.ui
 
 import android.content.res.ColorStateList
@@ -303,3 +562,30 @@ class NowPlayingActivity : AppCompatActivity() {
         handler.removeCallbacks(updateProgress)
     }
 }
+EOF
+echo "  ✓ NowPlayingActivity.kt"
+
+# ── 5. Tambah dependency Palette ke build.gradle ──────────────────────────────
+# Cek apakah sudah ada
+if ! grep -q "palette" app/build.gradle; then
+    # Sisipkan sebelum baris penutup dependencies {}
+    sed -i '/^}/i\    implementation "androidx.palette:palette-ktx:1.0.0"' app/build.gradle
+    echo "  ✓ Palette dependency ditambahkan ke app/build.gradle"
+else
+    echo "  ✓ Palette dependency sudah ada"
+fi
+
+# ── Selesai ───────────────────────────────────────────────────────────────────
+echo ""
+echo "✅ Material You Dynamic Color berhasil diterapkan!"
+echo ""
+echo "File yang diubah:"
+echo "  + DynamicThemeHelper.kt  — ekstrak warna dari Bitmap (Palette API)"
+echo "  ~ SongAdapter.kt         — placeholder warna-warni per lagu"
+echo "  ~ PlayerState.kt         — tambah shuffle & repeat"
+echo "  ~ NowPlayingActivity.kt  — apply warna ke seekbar, tombol, pill"
+echo ""
+echo "Jalankan sekarang:"
+echo "  git add ."
+echo "  git commit -m 'feat: Material You dynamic color dari cover art'"
+echo "  git pull --rebase && git push"
