@@ -1,6 +1,7 @@
 package com.dioxd.floramusic.ui
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
@@ -27,10 +28,13 @@ class SongAdapter(
     inner class SongViewHolder(private val binding: ItemSongBinding)
         : RecyclerView.ViewHolder(binding.root) {
         fun bind(song: Song, position: Int) {
+            val isPlaying = song.id == nowPlayingId
             binding.tvTitle.text    = song.title
             binding.tvArtist.text   = song.artist
             binding.tvDuration.text = song.durationText
-            binding.root.isActivated = song.id == nowPlayingId
+            binding.playingIndicator.visibility = if (isPlaying) View.VISIBLE else View.GONE
+            binding.tvTitle.alpha = if (isPlaying) 1f else 0.9f
+
             Glide.with(binding.imgAlbumArt)
                 .load(song.albumArtUri)
                 .placeholder(R.drawable.ic_music_note)
@@ -38,6 +42,7 @@ class SongAdapter(
                 .transition(DrawableTransitionOptions.withCrossFade())
                 .centerCrop()
                 .into(binding.imgAlbumArt)
+
             binding.root.setOnClickListener { onSongClick(song, position) }
         }
     }

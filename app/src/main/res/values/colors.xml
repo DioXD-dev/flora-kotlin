@@ -1,25 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="seed_primary">#386A20</color>
-    <color name="seed_on_primary">#FFFFFF</color>
-    <color name="seed_primary_container">#B2F397</color>
-    <color name="seed_on_primary_container">#062100</color>
-    <color name="seed_secondary">#54634D</color>
-    <color name="seed_secondary_container">#D7E8CC</color>
-    <color name="seed_on_secondary_container">#121F0E</color>
-    <color name="seed_surface">#FDFDF6</color>
-    <color name="seed_surface_variant">#DFE4D8</color>
-    <color name="seed_on_surface">#1A1C18</color>
-    <color name="seed_on_surface_variant">#43483E</color>
-    <color name="seed_primary_dark">#97D77E</color>
-    <color name="seed_on_primary_dark">#0D3900</color>
-    <color name="seed_primary_container_dark">#245108</color>
-    <color name="seed_on_primary_container_dark">#B2F397</color>
-    <color name="seed_secondary_dark">#BBCBB5</color>
-    <color name="seed_secondary_container_dark">#3C4B36</color>
-    <color name="seed_on_secondary_container_dark">#D7E8CC</color>
-    <color name="seed_surface_dark">#1A1C18</color>
-    <color name="seed_surface_variant_dark">#43483E</color>
-    <color name="seed_on_surface_dark">#E2E3DC</color>
-    <color name="seed_on_surface_variant_dark">#C3C8BC</color>
+    <!-- Light mode - warm cream palette -->
+    <color name="bg">#FFFDF9</color>
+    <color name="surface">#F5F0EB</color>
+    <color name="surface2">#EDE8E2</color>
+    <color name="primary">#4a9460</color>
+    <color name="primary_dark">#2d5a3d</color>
+    <color name="accent">#E8A87C</color>
+    <color name="accent_dark">#7a4520</color>
+    <color name="text_primary">#1a1a1a</color>
+    <color name="text_secondary">#888888</color>
+    <color name="divider">#E8E3DC</color>
+
+    <!-- Dark mode -->
+    <color name="bg_dark">#1A1714</color>
+    <color name="surface_dark">#242019</color>
+    <color name="surface2_dark">#2E2922</color>
+    <color name="text_primary_dark">#F0EBE3</color>
+    <color name="text_secondary_dark">#9A9490</color>
+    <color name="divider_dark">#333028</color>
 </resources>

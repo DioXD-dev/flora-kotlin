@@ -1,19 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.FloraMusic" parent="Theme.Material3.DayNight.NoActionBar">
-        <item name="colorPrimary">@color/seed_primary</item>
-        <item name="colorOnPrimary">@color/seed_on_primary</item>
-        <item name="colorPrimaryContainer">@color/seed_primary_container</item>
-        <item name="colorOnPrimaryContainer">@color/seed_on_primary_container</item>
-        <item name="colorSecondary">@color/seed_secondary</item>
-        <item name="colorSecondaryContainer">@color/seed_secondary_container</item>
-        <item name="colorOnSecondaryContainer">@color/seed_on_secondary_container</item>
-        <item name="colorSurface">@color/seed_surface</item>
-        <item name="colorSurfaceVariant">@color/seed_surface_variant</item>
-        <item name="colorOnSurface">@color/seed_on_surface</item>
-        <item name="colorOnSurfaceVariant">@color/seed_on_surface_variant</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:navigationBarColor">@android:color/transparent</item>
+    <style name="Theme.FloraMusic" parent="Theme.Material3.Light.NoActionBar">
+        <item name="colorPrimary">#4a9460</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorPrimaryContainer">#C8EDCC</item>
+        <item name="colorSecondary">#E8A87C</item>
+        <item name="colorSecondaryContainer">#FDEBD8</item>
+        <item name="colorOnSecondaryContainer">#4a2010</item>
+        <item name="colorSurface">#FFFDF9</item>
+        <item name="colorSurfaceVariant">#F5F0EB</item>
+        <item name="colorOnSurface">#1a1a1a</item>
+        <item name="colorOnSurfaceVariant">#666660</item>
+        <item name="android:colorBackground">#FFFDF9</item>
+        <item name="android:statusBarColor">#FFFDF9</item>
+        <item name="android:navigationBarColor">#FFFDF9</item>
         <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+    </style>
+    <style name="Theme.FloraMusic.NowPlaying" parent="Theme.FloraMusic">
+        <item name="android:windowBackground">@color/bg</item>
     </style>
 </resources>

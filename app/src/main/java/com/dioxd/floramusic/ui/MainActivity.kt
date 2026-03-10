@@ -1,10 +1,14 @@
 package com.dioxd.floramusic.ui
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.media.MediaPlayer
 import android.os.Build
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
+import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -12,15 +16,15 @@ import androidx.core.content.ContextCompat
 import com.bumptech.glide.Glide
 import com.dioxd.floramusic.R
 import com.dioxd.floramusic.data.MusicRepository
+import com.dioxd.floramusic.data.PlayerState
 import com.dioxd.floramusic.data.Song
 import com.dioxd.floramusic.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
+
     private lateinit var binding: ActivityMainBinding
     private lateinit var adapter: SongAdapter
-    private var mediaPlayer: MediaPlayer? = null
-    private var songs: List<Song> = emptyList()
-    private var currentIndex = -1
+    private lateinit var searchAdapter: SongAdapter
 
     private val permLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -33,15 +37,101 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        setupAdapters()
+        setupMiniPlayer()
+        setupSearch()
+        checkPermission()
+
+        // Update UI saat kembali dari NowPlaying
+        PlayerState.onSongChanged = { song ->
+            runOnUiThread {
+                adapter.nowPlayingId = song.id
+                searchAdapter.nowPlayingId = song.id
+                updateMiniPlayer(song)
+            }
+        }
+        PlayerState.onPlayStateChanged = { isPlaying ->
+            runOnUiThread {
+                binding.btnPlayPause.setImageResource(
+                    if (isPlaying) R.drawable.ic_pause else R.drawable.ic_play
+                )
+            }
+        }
+    }
+
+    private fun setupAdapters() {
         adapter = SongAdapter { song, index -> playSong(song, index) }
         binding.recyclerView.adapter = adapter
-        binding.recyclerView.setHasFixedSize(true)
-        binding.btnPlayPause.setOnClickListener {
-            mediaPlayer?.let { if (it.isPlaying) pauseSong() else resumeSong() }
+
+        searchAdapter = SongAdapter { song, index ->
+            val realIndex = PlayerState.songs.indexOfFirst { it.id == song.id }
+            playSong(song, realIndex)
+            closeSearch()
         }
-        binding.btnNext.setOnClickListener { playNext() }
-        binding.btnPrev.setOnClickListener { playPrev() }
-        checkPermission()
+        binding.searchRecycler.adapter = searchAdapter
+    }
+
+    private fun setupMiniPlayer() {
+        binding.miniPlayer.setOnClickListener {
+            startActivity(Intent(this, NowPlayingActivity::class.java))
+            overridePendingTransition(R.anim.slide_up, 0)
+        }
+
+        binding.btnPlayPause.setOnClickListener {
+            PlayerState.mediaPlayer?.let {
+                if (it.isPlaying) {
+                    it.pause(); PlayerState.isPlaying = false
+                } else {
+                    it.start(); PlayerState.isPlaying = true
+                }
+                binding.btnPlayPause.setImageResource(
+                    if (PlayerState.isPlaying) R.drawable.ic_pause else R.drawable.ic_play
+                )
+            }
+        }
+
+        binding.btnNext.setOnClickListener {
+            val songs = PlayerState.songs
+            if (songs.isEmpty()) return@setOnClickListener
+            val next = (PlayerState.currentIndex + 1) % songs.size
+            playSong(songs[next], next)
+        }
+
+        binding.btnPrev.setOnClickListener {
+            val songs = PlayerState.songs
+            if (songs.isEmpty()) return@setOnClickListener
+            val prev = if (PlayerState.currentIndex <= 0) songs.size - 1 else PlayerState.currentIndex - 1
+            playSong(songs[prev], prev)
+        }
+    }
+
+    private fun setupSearch() {
+        binding.btnSearch.setOnClickListener {
+            binding.searchOverlay.visibility = View.VISIBLE
+            binding.etSearch.requestFocus()
+        }
+
+        binding.btnCloseSearch.setOnClickListener { closeSearch() }
+
+        binding.etSearch.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                val query = s?.toString()?.lowercase() ?: ""
+                val filtered = PlayerState.songs.filter {
+                    it.title.lowercase().contains(query) ||
+                    it.artist.lowercase().contains(query) ||
+                    it.album.lowercase().contains(query)
+                }
+                searchAdapter.submitList(filtered)
+            }
+            override fun afterTextChanged(s: Editable?) {}
+        })
+    }
+
+    private fun closeSearch() {
+        binding.searchOverlay.visibility = View.GONE
+        binding.etSearch.setText("")
     }
 
     private fun checkPermission() {
@@ -52,32 +142,52 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadSongs() {
-        songs = MusicRepository.getAllSongs(this)
+        val songs = MusicRepository.getAllSongs(this)
+        PlayerState.songs = songs
         adapter.submitList(songs)
+        searchAdapter.submitList(songs)
         binding.tvSongCount.text = "${songs.size} lagu"
     }
 
     private fun playSong(song: Song, index: Int) {
-        currentIndex = index
-        mediaPlayer?.release()
-        mediaPlayer = MediaPlayer().apply {
+        PlayerState.currentIndex = index
+        PlayerState.mediaPlayer?.release()
+        PlayerState.mediaPlayer = MediaPlayer().apply {
             setDataSource(applicationContext, song.uri)
-            prepare(); start()
-            setOnCompletionListener { playNext() }
+            prepare()
+            start()
+            setOnCompletionListener {
+                val next = (PlayerState.currentIndex + 1) % PlayerState.songs.size
+                playSong(PlayerState.songs[next], next)
+            }
         }
+        PlayerState.isPlaying = true
         adapter.nowPlayingId = song.id
-        binding.tvNowTitle.text  = song.title
-        binding.tvNowArtist.text = song.artist
-        binding.btnPlayPause.setIconResource(R.drawable.ic_pause)
-        Glide.with(this).load(song.albumArtUri)
-            .placeholder(R.drawable.ic_music_note).error(R.drawable.ic_music_note)
-            .centerCrop().into(binding.imgNowArt)
+        searchAdapter.nowPlayingId = song.id
+        updateMiniPlayer(song)
     }
 
-    private fun pauseSong()  { mediaPlayer?.pause(); binding.btnPlayPause.setIconResource(R.drawable.ic_play) }
-    private fun resumeSong() { mediaPlayer?.start(); binding.btnPlayPause.setIconResource(R.drawable.ic_pause) }
-    private fun playNext() { if (songs.isEmpty()) return; val i = (currentIndex + 1) % songs.size; playSong(songs[i], i) }
-    private fun playPrev() { if (songs.isEmpty()) return; val i = if (currentIndex <= 0) songs.size - 1 else currentIndex - 1; playSong(songs[i], i) }
+    private fun updateMiniPlayer(song: Song) {
+        binding.miniPlayerContainer.visibility = View.VISIBLE
+        binding.tvNowTitle.text  = song.title
+        binding.tvNowArtist.text = song.artist
+        binding.btnPlayPause.setImageResource(R.drawable.ic_pause)
+        Glide.with(this)
+            .load(song.albumArtUri)
+            .placeholder(R.drawable.ic_music_note)
+            .error(R.drawable.ic_music_note)
+            .centerCrop()
+            .into(binding.imgNowArt)
+    }
 
-    override fun onDestroy() { super.onDestroy(); mediaPlayer?.release() }
+    override fun onResume() {
+        super.onResume()
+        // Sync state saat balik dari NowPlaying
+        PlayerState.currentSong?.let {
+            adapter.nowPlayingId = it.id
+            binding.btnPlayPause.setImageResource(
+                if (PlayerState.isPlaying) R.drawable.ic_pause else R.drawable.ic_play
+            )
+        }
+    }
 }

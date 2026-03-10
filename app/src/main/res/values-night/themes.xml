@@ -1,19 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.FloraMusic" parent="Theme.Material3.DayNight.NoActionBar">
-        <item name="colorPrimary">@color/seed_primary_dark</item>
-        <item name="colorOnPrimary">@color/seed_on_primary_dark</item>
-        <item name="colorPrimaryContainer">@color/seed_primary_container_dark</item>
-        <item name="colorOnPrimaryContainer">@color/seed_on_primary_container_dark</item>
-        <item name="colorSecondary">@color/seed_secondary_dark</item>
-        <item name="colorSecondaryContainer">@color/seed_secondary_container_dark</item>
-        <item name="colorOnSecondaryContainer">@color/seed_on_secondary_container_dark</item>
-        <item name="colorSurface">@color/seed_surface_dark</item>
-        <item name="colorSurfaceVariant">@color/seed_surface_variant_dark</item>
-        <item name="colorOnSurface">@color/seed_on_surface_dark</item>
-        <item name="colorOnSurfaceVariant">@color/seed_on_surface_variant_dark</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:navigationBarColor">@android:color/transparent</item>
+    <style name="Theme.FloraMusic" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorPrimary">#7EC8A0</item>
+        <item name="colorOnPrimary">#1a3d28</item>
+        <item name="colorPrimaryContainer">#2d5a3d</item>
+        <item name="colorSecondary">#E8A87C</item>
+        <item name="colorSecondaryContainer">#4a2010</item>
+        <item name="colorOnSecondaryContainer">#FDEBD8</item>
+        <item name="colorSurface">#1A1714</item>
+        <item name="colorSurfaceVariant">#242019</item>
+        <item name="colorOnSurface">#F0EBE3</item>
+        <item name="colorOnSurfaceVariant">#9A9490</item>
+        <item name="android:colorBackground">#1A1714</item>
+        <item name="android:statusBarColor">#1A1714</item>
+        <item name="android:navigationBarColor">#1A1714</item>
         <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+    </style>
+    <style name="Theme.FloraMusic.NowPlaying" parent="Theme.FloraMusic">
+        <item name="android:windowBackground">@color/bg_dark</item>
     </style>
 </resources>
